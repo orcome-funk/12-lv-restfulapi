@@ -12,7 +12,7 @@ class AuthController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        return 'It works';
     }
 
     /**
@@ -23,6 +23,6 @@ class AuthController extends Controller
      */
     public function signin(Request $request)
     {
-        //
+        return 'It works';
     }
 }
