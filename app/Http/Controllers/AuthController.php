@@ -78,6 +78,43 @@ class AuthController extends Controller
      */
     public function signin(Request $request)
     {
-        return 'It works';
+        $this->validate($request, [
+            'email'    => 'required|email',
+            'password' => 'required|min:5',
+        ]);
+
+        $email = $request->input('email');
+        $password = $request->input('password');
+
+        if ($user = User::where('email', $email)->first()) {
+            $credentials = [
+                'email'    => $email,
+                'password' => $password,
+            ];
+
+            $token = null;
+            try {
+                if (!$token = JWTAuth::attempt($credentials)) {
+                    return response()->json([
+                        'msg' => 'Email or Password are incorrect',
+                    ], 404);
+                }
+            } catch (JWTAuthException $e) {
+                return response()->json([
+                    'msg' => 'failed_to_create_token',
+                ], 404);
+            }
+
+            $response = [
+                'msg'   => 'User signin',
+                'user'  => $user,
+                'token' => $token,
+            ];
+            return response()->json($response, 201);
+        }
+        $response = [
+            'msg' => 'An error occurred',
+        ];
+        return response()->json($response, 404);
     }
 }
