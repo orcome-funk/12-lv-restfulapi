@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use JWTAuth;
 use App\User;
+use JWTAuthException;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller
@@ -28,18 +30,38 @@ class AuthController extends Controller
         $user = new User([
             'name'     => $name,
             'email'    => $email,
-            'password' => bcrypt('$password'),
+            'password' => bcrypt($password),
         ]);
 
+        $credentials = [
+            'email'    => $email,
+            'password' => $password,
+        ];
+
         if ($user->save()) {
+
+            $token = null;
+            try {
+                if (!$token = JWTAuth::attempt($credentials)) {
+                    return response()->json([
+                        'msg' => 'Email or Password are incorrect',
+                    ], 404);
+                }
+            } catch (JWTAuthException $e) {
+                return response()->json([
+                    'msg' => 'failed_to_create_token',
+                ], 404);
+            }
+
             $user->signin = [
                 'href'   => 'api/v1/user/signin',
                 'method' => 'POST',
                 'params' => 'email, password',
             ];
             $response = [
-                'msg'  => 'User created',
-                'user' => $user,
+                'msg'   => 'User created',
+                'user'  => $user,
+                'token' => $token,
             ];
             return response()->json($response, 201);
         }
